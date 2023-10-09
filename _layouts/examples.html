@@ -1,0 +1,1298 @@
+<!doctype html>
+
+<! -- 
+MIT License
+
+Copyright (c) 2018 david.lv
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-- >
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="Description" CONTENT="Try FreeFEM's online version">
+  <link rel="stylesheet" href="{{ site.url }}{{ site.baseurl }}/css/style.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700,900" rel="stylesheet">
+	<link rel="icon" href="{{ site.url }}{{ site.baseurl }}/img/symbol_FreeFEM_97x97.png" type="image/x-icon" />
+  <link rel="stylesheet" href="{{ site.url }}{{ site.baseurl }}/css/codemirror.css">
+  <script src="{{ site.url }}{{ site.baseurl }}/js/codemirror.js"></script>
+  <script src="{{ site.url }}{{ site.baseurl }}/js/searchcursor.js"></script>
+  <script src="{{ site.url }}{{ site.baseurl }}/js/mode/freefem/freefem.js"></script>
+  <script src="{{ site.url }}{{ site.baseurl }}/js/split-grid.min.js"></script>
+  <script src="{{ site.url }}{{ site.baseurl }}/js/tree.min.js"></script>
+  <script defer src="https://www.ljll.math.upmc.fr/lehyaric/ffjs/jquery-1.11.2.min.js"></script>
+  <script>
+    console.log('loading FreeFEM')
+    var freefemScript = document.createElement("script");
+    freefemScript.src = './js/freefem-js-compiled.js';
+    freefemScript.defer = true;
+    document.getElementsByTagName('head')[0].appendChild(freefemScript);
+
+    freefemScript.onload = freefemScript.onreadystatechange = function() {
+      if (document.readyState) {
+        document.getElementById('orbit-spinner').classList.add('is-invisible')
+        document.getElementById('arrow').style.pointerEvents = 'auto';
+        console.log('loaded!')
+      }
+    }
+
+  </script>
+  <script defer src="./js/custom-freefem-api.js"></script>
+  <title>{{ page.title }}</title>
+</head>
+
+<body id="examples">
+  {% include header.html %}
+
+<!--
+  <section id="tags">
+    <div class="tags" id="tags">
+      <input placeholder="Filter keyword" list="ff-keywords" id="keyword-input" oninput="updateList(true);highlightKeyword(editor);"/>
+      <datalist id="ff-keywords">
+      </datalist>
+    </div>
+  </section>
+-->
+  <section id="exampleMain">
+    <div id="orbit-spinner">
+      <div class="orbit"></div>
+      <div class="orbit"></div>
+      <div class="orbit"></div>
+      <div class="orbitMsg">LOADING</div>
+    </div>
+    <div id="exampleScripts">
+      <h2>Example Scripts</h2>
+      <div class="tag-tree-container">
+      </div>
+    </div>
+    <div id="exampleInfo">
+      <div id="example2D">
+        <!-- <i class="fas fa-times" onclick="this.parentNode.style.display = 'none'; const exampleGithub = document.getElementById('exampleGithub'); exampleGithub.style.marginTop = 'auto'"></i> -->
+        <p>FreeFEM JS only works in 2D. Created by <a href="https://www.ljll.math.upmc.fr/lehyaric/ffjs/" target="_blank">Antoine Le Hyaric</a>.</p>
+      </div>
+      <div id="exampleGithub">
+        <a class="header-github" href="https://github.com/FreeFem/FreeFem-sources" target="_blank">
+          <i class="fab fa-github"></i>
+          <p class="header-github-title">
+            FreeFEM on GitHub
+          </p>
+
+          <p class="header-github-stars" id="headerGithubStarsForks">
+            <span id="headerGithubStars"></span> stars - <span id="headerGithubForks"></span> forks
+          </p>
+        </a>
+        <script async src="{{ site.url }}{{ site.baseurl }}/js/github.js"></script>
+      </div>
+    </div>
+    <div class="gutter" id="gutter1"></div>
+    <div id="exampleLinks">
+      <h2 onclick="openLinks()">Matches</h2>
+      <div id="linksContainer">
+      </div>
+    </div>
+    <div id="exampleCode" spellcheck="false">
+      <h2><div id='ExampleLinkToGitHub'></div> <span id="exampleSave" onclick="saveEDP(editor)">Save as EDP</span></h2>
+
+      <textarea class="ffjs" id="code"></textarea>
+      <script>
+        var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+          lineNumbers: true,
+          mode: "text/x-ff++src"
+        })
+      </script>
+      <script async src="{{ site.url }}{{ site.baseurl }}/js/saveEDP.js"></script>
+    </div>
+    <div class="gutter" id="gutter2"></div>
+    <div id="exampleResult">
+      <h2 onclick="openConsoleExamples()">Result</h2>
+      <div id="resultContainer">
+        <div id="arrow">
+          <div id="arrow-right" onclick="ffjs_evaluate()"></div>
+          <div id="arrow-text">RUN</div>
+          <div id="arrow-spinner" class="sk-fading-circle is-invisible">
+            <div class="sk-circle1 sk-circle"></div>
+            <div class="sk-circle2 sk-circle"></div>
+            <div class="sk-circle3 sk-circle"></div>
+            <div class="sk-circle4 sk-circle"></div>
+            <div class="sk-circle5 sk-circle"></div>
+            <div class="sk-circle6 sk-circle"></div>
+            <div class="sk-circle7 sk-circle"></div>
+            <div class="sk-circle8 sk-circle"></div>
+            <div class="sk-circle9 sk-circle"></div>
+            <div class="sk-circle10 sk-circle"></div>
+            <div class="sk-circle11 sk-circle"></div>
+            <div class="sk-circle12 sk-circle"></div>
+          </div>
+        </div>
+        <canvas class="ffjs_graph" data-ffjs="default">
+          FreeFEM JS is not available for your browser as it doesn't support javascript Canvas.
+        </canvas>
+      </div>
+    </div>
+    <div id="exampleConsole">
+      <h2 onclick="openConsoleExamples()">Console</h2>
+      <div id="ffjs_stdout" class="is-invisible">Please click on the RUN button first.</div>
+      <div id="ffjs_stderr" style="font-family:monospace;"></div>
+    </div>
+  </section>
+
+  {% include footer.html %}
+
+  <script src="{{ site.url }}{{ site.baseurl }}/js/openConsole.js"></script>
+  <script src="{{ site.url }}{{ site.baseurl }}/js/loadExample.js"></script>
+  <script src="{{ site.url }}{{ site.baseurl }}/js/examples.js"></script>
+  <script>
+    Split({
+      columnGutters: [{
+          track: 1,
+          element: document.querySelector('#gutter1'),
+        },
+        {
+          track: 3,
+          element: document.querySelector('#gutter2'),
+        }
+      ]
+    })
+
+
+let data =
+[
+{ "id": "0", "text": "Equations", "children":
+  [
+  { "id": "0-0", "text": "Fluid mechanics", "children":
+    [
+    { "id": "Navier-Stokes", "text": "Navier-Stokes" },
+    { "id": "Stokes", "text": "Stokes" }
+    ]
+  },
+  { "id": "0-1", "text": "Solid mechanics", "children":
+    [
+    { "id": "elasticity", "text": "Elasticity"
+    }
+    ]
+  },
+  { "id": "0-2", "text": "Wave propagation", "children":
+    [
+    { "id": "0-2-0", "text": "Frequency domain", "children":
+      [
+        { "id": "Helmholtz", "text": "Helmholtz equation"},
+        { "id": "Maxwell", "text": "Maxwell's equations" }
+      ]
+    },
+    { "id": "0-2-1", "text": "Time domain"
+    }
+    ]
+  },
+  { "id": "diffusion", "text": "Diffusion"
+  },
+  ]
+},
+{ "id": "1", "text": "Spatial dimension", "children":
+  [
+  { "id": "1-0", "text": "2D"},
+  { "id": "1-1", "text": "3D"}
+  ]
+},
+{ "id": "2", "text": "Mesh generation", "children":
+  [
+  { "id": "square", "text": "square"},
+  { "id": "savemesh", "text": "savemesh"},
+  { "id": "buildmesh", "text": "buildmesh"}
+  ]
+},
+{ "id": "2", "text": "Mesh generation", "children":
+  [
+  { "id": "square", "text": "square"},
+  { "id": "savemesh", "text": "savemesh"},
+  { "id": "buildmesh", "text": "buildmesh"}
+  ]
+},
+{ "id": "2", "text": "Mesh generation", "children":
+  [
+  { "id": "square", "text": "square"},
+  { "id": "savemesh", "text": "savemesh"},
+  { "id": "buildmesh", "text": "buildmesh"}
+  ]
+},
+{ "id": "2", "text": "Mesh generation", "children":
+  [
+  { "id": "square", "text": "square"},
+  { "id": "savemesh", "text": "savemesh"},
+  { "id": "buildmesh", "text": "buildmesh"}
+  ]
+},
+{ "id": "2", "text": "Mesh generation", "children":
+  [
+  { "id": "square", "text": "square"},
+  { "id": "savemesh", "text": "savemesh"},
+  { "id": "buildmesh", "text": "buildmesh"}
+  ]
+},
+{ "id": "2", "text": "Mesh generation", "children":
+  [
+  { "id": "square", "text": "square"},
+  { "id": "savemesh", "text": "savemesh"},
+  { "id": "buildmesh", "text": "buildmesh"}
+  ]
+},
+{ "id": "2", "text": "Mesh generation", "children":
+  [
+  { "id": "square", "text": "square"},
+  { "id": "savemesh", "text": "savemesh"},
+  { "id": "buildmesh", "text": "buildmesh"}
+  ]
+}
+]
+
+    var FilteredTags = []
+    var all_examples = []
+    const TagCount = new Map();
+    fetch('data/all_examples.json')
+    .then((response) => response.json())
+    .then((json) => {
+      all_examples = json;
+      all_examples.forEach(function callback(example) {
+        example.tags.split(" ").forEach(function callback(value) {
+          TagCount.set(value, (TagCount.get(value) ?? 0) + 1);
+        });
+      });
+      parsetree(data);
+      let tree = new Tree('.tag-tree-container', {
+          data: data,
+          closeDepth: 3,
+          loaded: function () {
+              this.values = ['0-0-0', '0-1-1'];
+              //console.log(this.selectedNodes);
+              //console.log(this.values);
+              //this.disables = ['0-0-0', '0-0-1', '0-0-2']
+          },
+          onChange: function () {
+              //console.log(this.values);
+              FilteredTags = this.values;
+              updateList(true);
+          }
+      })
+    });
+
+    const examplesList = document.getElementById('linksContainer')
+    {% for example in site.data.all_examples %}
+    {% if example.name == "lapacienprecon.edp" %}
+    examplesList.innerHTML += '<a href="#" title="{{ example.desc }}" onclick="loadExamplefromGitHub(\'{{ example.name, }}\', \'{{ example.dir, }}\', editor)">{{ example.name }}</a>\n'
+    {% endif %}
+    {% endfor %}
+  
+    loadExample('{{ site.data.examples[0].path }}', editor)
+
+    document.getElementById("exampleLinks").addEventListener("focus",  function() {
+      updateList(true);
+    },false);
+    document.getElementById("exampleLinks").addEventListener("blur",  function() {
+      updateList(false);
+    },false);
+    document.getElementById("exampleCode").addEventListener("focus",  function() {
+      updateList(false);
+    },true);
+
+//    const Tags = ["adaptmesh", "mmg", "buildmesh", "extract"];
+    const Tags = ["IO-mesh", "potential-flow", "fe-array", "elasticity", "gslspline", "square", "adaptmesh", "tetg", "tetgreconstruction", "tetgtransfo", "mesh-generation", "buildmesh", "mesh-datastructure", "buildlayers", "convect", "trunc", "cube", "periodic", "savemesh", "diffusion", "boundary-conditions", "movemesh", "mmg3d", "ofstream", "levelset", "mshmet", "DG", "anisotropy", "mixed-FE", "multi-domain", "Stokes", "Navier-Stokes", "domain-decomposition"];
+
+    const Keywords = [
+'BemKernel',
+'BemPotential',
+'bool',
+'border',
+'complex',
+'dmatrix',
+'fespace',
+'func',
+'gslspline',
+'HMatrix',
+'ifstream',
+'int',
+'macro',
+'Mat',
+'matrix',
+'mesh',
+'mesh3',
+'meshL',
+'meshS',
+'mpiComm',
+'mpiGroup',
+'mpiRequest',
+'NewMacro',
+'EndMacro',
+'ofstream',
+'Pmmap',
+'problem',
+'Psemaphore',
+'real',
+'solve',
+'string',
+'varf',
+'BDM1',
+'BDM1Ortho',
+'Edge03d',
+'Edge13d',
+'Edge23d',
+'FEQF',
+'HCT',
+'P0',
+'P03d',
+'P0Edge',
+'P1',
+'P13d',
+'P1b',
+'P1b3d',
+'P1bl',
+'P1bl3d',
+'P1dc',
+'P1Edge',
+'P1nc',
+'P2',
+'P23d',
+'P2b',
+'P2BR',
+'P2dc',
+'P2Edge',
+'P2h',
+'P2Morley',
+'P2pnc',
+'P3',
+'P3dc',
+'P3Edge',
+'P4',
+'P4dc',
+'P4Edge',
+'P5Edge',
+'RT0',
+'RT03d',
+'RT0Ortho',
+'RT1',
+'RT1Ortho',
+'RT2',
+'RT2Ortho',
+'ENDIFMACRO',
+'include',
+'IFMACRO',
+'load',
+'adj',
+'append',
+'area',
+'ARGV',
+'be',
+'binary',
+'BoundaryEdge',
+'bordermeasure',
+'CG',
+'Cholesky',
+'cin',
+'cout',
+'Crout',
+'default',
+'diag',
+'edgeOrientation',
+'endl',
+'false',
+'ffind',
+'FILE',
+'find',
+'fixed',
+'flush',
+'GMRES',
+'good',
+'hTriangle',
+'im',
+'imax',
+'imin',
+'InternalEdge',
+'l1',
+'l2',
+'label',
+'lenEdge',
+'length',
+'LINE',
+'linfty',
+'LU',
+'m',
+'max',
+'measure',
+'min',
+'mpiAnySource',
+'mpiBAND',
+'mpiBXOR',
+'mpiCommWorld',
+'mpiLAND',
+'mpiLOR',
+'mpiLXOR',
+'mpiMAX',
+'mpiMIN',
+'mpiPROD',
+'mpirank',
+'mpisize',
+'mpiSUM',
+'mpiUndefined',
+'n',
+'N',
+'Nt',
+'nbe',
+'ndof',
+'ndofK',
+'noshowbase',
+'noshowpos',
+'notaregion',
+'nt',
+'nTonEdge',
+'nuEdge',
+'nuTriangle',
+'nv',
+'nbnomanifold',
+'P',
+'pi',
+'precision',
+'qf1pE',
+'qf1pElump',
+'qf1pT',
+'qf1pTlump',
+'qfV1',
+'qfV1lump',
+'qf2pE',
+'qf2pT',
+'qf2pT4P1',
+'qfV2',
+'qf3pE',
+'qf4pE',
+'qf5pE',
+'qf5pT',
+'qfV5',
+'qf7pT',
+'qf9pT',
+'qfnbpE',
+'quantile',
+'re',
+'region',
+'rfind',
+'scientific',
+'searchMethod',
+'setw',
+'showbase',
+'showpos',
+'sparsesolver',
+'sum',
+'tellp',
+'true',
+'UMFPACK',
+'unused',
+'whoinElement',
+'verbosity',
+'version',
+'volume',
+'x',
+'y',
+'z',
+'abs',
+'acos',
+'acosh',
+'adaptmesh',
+'adj',
+'AffineCG',
+'AffineGMRES',
+'arg',
+'asin',
+'asinh',
+'assert',
+'atan',
+'atan2',
+'atanh',
+'atof',
+'atoi',
+'BEM',
+'BFGS',
+'broadcast',
+'buildlayers',
+'buildmesh',
+'buildmeshL',
+'buildBdMesh',
+'ceil',
+'chi',
+'complexEigenValue',
+'copysign',
+'change',
+'checkmovemesh',
+'checkmesh',
+'clock',
+'cmaes',
+'conj',
+'convect',
+'cos',
+'cosh',
+'cube',
+'d',
+'dd',
+'dfft',
+'diffnp',
+'diffpos',
+'dimKrylov',
+'display',
+'dist',
+'dumptable',
+'dx',
+'dxx',
+'dxy',
+'dxz',
+'dy',
+'dyx',
+'dyy',
+'dyz',
+'dz',
+'dzx',
+'dzy',
+'dzz',
+'EigenValue',
+'emptymesh',
+'erf',
+'erfc',
+'exec',
+'exit',
+'exp',
+'extract',
+'fdim',
+'floor',
+'fmax',
+'fmin',
+'fmod',
+'freeyams',
+'Gamma',
+'getARGV',
+'getline',
+'gmshload',
+'gmshload3',
+'gslcdfugaussianP',
+'gslcdfugaussianQ',
+'gslcdfugaussianPinv',
+'gslcdfugaussianQinv',
+'gslcdfgaussianP',
+'gslcdfgaussianQ',
+'gslcdfgaussianPinv',
+'gslcdfgaussianQinv',
+'gslcdfgammaP',
+'gslcdfgammaQ',
+'gslcdfgammaPinv',
+'gslcdfgammaQinv',
+'gslcdfcauchyP',
+'gslcdfcauchyQ',
+'gslcdfcauchyPinv',
+'gslcdfcauchyQinv',
+'gslcdflaplaceP',
+'gslcdflaplaceQ',
+'gslcdflaplacePinv',
+'gslcdflaplaceQinv',
+'gslcdfrayleighP',
+'gslcdfrayleighQ',
+'gslcdfrayleighPinv',
+'gslcdfrayleighQinv',
+'gslcdfchisqP',
+'gslcdfchisqQ',
+'gslcdfchisqPinv',
+'gslcdfchisqQinv',
+'gslcdfexponentialP',
+'gslcdfexponentialQ',
+'gslcdfexponentialPinv',
+'gslcdfexponentialQinv',
+'gslcdfexppowP',
+'gslcdfexppowQ',
+'gslcdftdistP',
+'gslcdftdistQ',
+'gslcdftdistPinv',
+'gslcdftdistQinv',
+'gslcdffdistP',
+'gslcdffdistQ',
+'gslcdffdistPinv',
+'gslcdffdistQinv',
+'gslcdfbetaP',
+'gslcdfbetaQ',
+'gslcdfbetaPinv',
+'gslcdfbetaQinv',
+'gslcdfflatP',
+'gslcdfflatQ',
+'gslcdfflatPinv',
+'gslcdfflatQinv',
+'gslcdflognormalP',
+'gslcdflognormalQ',
+'gslcdflognormalPinv',
+'gslcdflognormalQinv',
+'gslcdfgumbel1P',
+'gslcdfgumbel1Q',
+'gslcdfgumbel1Pinv',
+'gslcdfgumbel1Qinv',
+'gslcdfgumbel2P',
+'gslcdfgumbel2Q',
+'gslcdfgumbel2Pinv',
+'gslcdfgumbel2Qinv',
+'gslcdfweibullP',
+'gslcdfweibullQ',
+'gslcdfweibullPinv',
+'gslcdfweibullQinv',
+'gslcdfparetoP',
+'gslcdfparetoQ',
+'gslcdfparetoPinv',
+'gslcdfparetoQinv',
+'gslcdflogisticP',
+'gslcdflogisticQ',
+'gslcdflogisticPinv',
+'gslcdflogisticQinv',
+'gslcdfbinomialP',
+'gslcdfbinomialQ',
+'gslcdfpoissonP',
+'gslcdfpoissonQ',
+'gslcdfgeometricP',
+'gslcdfgeometricQ',
+'gslcdfnegativebinomialP',
+'gslcdfnegativebinomialQ',
+'gslcdfpascalP',
+'gslcdfpascalQ',
+'gslinterpakima',
+'gslinterpakimaperiodic',
+'gslinterpcsplineperiodic',
+'gslinterpcspline',
+'gslinterpsteffen',
+'gslinterplinear',
+'gslinterppolynomial',
+'gslranbernoullipdf',
+'gslranbeta',
+'gslranbetapdf',
+'gslranbinomialpdf',
+'gslranexponential',
+'gslranexponentialpdf',
+'gslranexppow',
+'gslranexppowpdf',
+'gslrancauchy',
+'gslrancauchypdf',
+'gslranchisq',
+'gslranchisqpdf',
+'gslranerlang',
+'gslranerlangpdf',
+'gslranfdist',
+'gslranfdistpdf',
+'gslranflat',
+'gslranflatpdf',
+'gslrangamma',
+'gslrangammaint',
+'gslrangammapdf',
+'gslrangammamt',
+'gslrangammaknuth',
+'gslrangaussian',
+'gslrangaussianratiomethod',
+'gslrangaussianziggurat',
+'gslrangaussianpdf',
+'gslranugaussian',
+'gslranugaussianratiomethod',
+'gslranugaussianpdf',
+'gslrangaussiantail',
+'gslrangaussiantailpdf',
+'gslranugaussiantail',
+'gslranugaussiantailpdf',
+'gslranlandau',
+'gslranlandaupdf',
+'gslrangeometricpdf',
+'gslrangumbel1',
+'gslrangumbel1pdf',
+'gslrangumbel2',
+'gslrangumbel2pdf',
+'gslranlogistic',
+'gslranlogisticpdf',
+'gslranlognormal',
+'gslranlognormalpdf',
+'gslranlogarithmicpdf',
+'gslrannegativebinomialpdf',
+'gslranpascalpdf',
+'gslranpareto',
+'gslranparetopdf',
+'gslranpoissonpdf',
+'gslranrayleigh',
+'gslranrayleighpdf',
+'gslranrayleightail',
+'gslranrayleightailpdf',
+'gslrantdist',
+'gslrantdistpdf',
+'gslranlaplace',
+'gslranlaplacepdf',
+'gslranlevy',
+'gslranweibull',
+'gslranweibullpdf',
+'gslsfairyAi',
+'gslsfairyBi',
+'gslsfairyAiscaled',
+'gslsfairyBiscaled',
+'gslsfairyAideriv',
+'gslsfairyBideriv',
+'gslsfairyAiderivscaled',
+'gslsfairyBiderivscaled',
+'gslsfairyzeroAi',
+'gslsfairyzeroBi',
+'gslsfairyzeroAideriv',
+'gslsfairyzeroBideriv',
+'gslsfbesselJ0',
+'gslsfbesselJ1',
+'gslsfbesselJn',
+'gslsfbesselY0',
+'gslsfbesselY1',
+'gslsfbesselYn',
+'gslsfbesselI0',
+'gslsfbesselI1',
+'gslsfbesselIn',
+'gslsfbesselI0scaled',
+'gslsfbesselI1scaled',
+'gslsfbesselInscaled',
+'gslsfbesselK0',
+'gslsfbesselK1',
+'gslsfbesselKn',
+'gslsfbesselK0scaled',
+'gslsfbesselK1scaled',
+'gslsfbesselKnscaled',
+'gslsfbesselj0',
+'gslsfbesselj1',
+'gslsfbesselj2',
+'gslsfbesseljl',
+'gslsfbessely0',
+'gslsfbessely1',
+'gslsfbessely2',
+'gslsfbesselyl',
+'gslsfbesseli0scaled',
+'gslsfbesseli1scaled',
+'gslsfbesseli2scaled',
+'gslsfbesselilscaled',
+'gslsfbesselk0scaled',
+'gslsfbesselk1scaled',
+'gslsfbesselk2scaled',
+'gslsfbesselklscaled',
+'gslsfbesselJnu',
+'gslsfbesselYnu',
+'gslsfbesselInuscaled',
+'gslsfbesselInu',
+'gslsfbesselKnuscaled',
+'gslsfbesselKnu',
+'gslsfbessellnKnu',
+'gslsfbesselzeroJ0',
+'gslsfbesselzeroJ1',
+'gslsfbesselzeroJnu',
+'gslsfclausen',
+'gslsfhydrogenicR1',
+'gslsfdawson',
+'gslsfdebye1',
+'gslsfdebye2',
+'gslsfdebye3',
+'gslsfdebye4',
+'gslsfdebye5',
+'gslsfdebye6',
+'gslsfdilog',
+'gslsfmultiply',
+'gslsfellintKcomp',
+'gslsfellintEcomp',
+'gslsfellintPcomp',
+'gslsfellintDcomp',
+'gslsfellintF',
+'gslsfellintE',
+'gslsfellintRC',
+'gslsferfc',
+'gslsflogerfc',
+'gslsferf',
+'gslsferfZ',
+'gslsferfQ',
+'gslsfhazard',
+'gslsfexp',
+'gslsfexpmult',
+'gslsfexpm1',
+'gslsfexprel',
+'gslsfexprel2',
+'gslsfexpreln',
+'gslsfexpintE1',
+'gslsfexpintE2',
+'gslsfexpintEn',
+'gslsfexpintE1scaled',
+'gslsfexpintE2scaled',
+'gslsfexpintEnscaled',
+'gslsfexpintEi',
+'gslsfexpintEiscaled',
+'gslsfShi',
+'gslsfChi',
+'gslsfexpint3',
+'gslsfSi',
+'gslsfCi',
+'gslsfatanint',
+'gslsffermidiracm1',
+'gslsffermidirac0',
+'gslsffermidirac1',
+'gslsffermidirac2',
+'gslsffermidiracint',
+'gslsffermidiracmhalf',
+'gslsffermidirachalf',
+'gslsffermidirac3half',
+'gslsffermidiracinc0',
+'gslsflngamma',
+'gslsfgamma',
+'gslsfgammastar',
+'gslsfgammainv',
+'gslsftaylorcoeff',
+'gslsffact',
+'gslsfdoublefact',
+'gslsflnfact',
+'gslsflndoublefact',
+'gslsflnchoose',
+'gslsfchoose',
+'gslsflnpoch',
+'gslsfpoch',
+'gslsfpochrel',
+'gslsfgammaincQ',
+'gslsfgammaincP',
+'gslsfgammainc',
+'gslsflnbeta',
+'gslsfbeta',
+'gslsfbetainc',
+'gslsfgegenpoly1',
+'gslsfgegenpoly2',
+'gslsfgegenpoly3',
+'gslsfgegenpolyn',
+'gslsfhyperg0F1',
+'gslsfhyperg1F1int',
+'gslsfhyperg1F1',
+'gslsfhypergUint',
+'gslsfhypergU',
+'gslsfhyperg2F0',
+'gslsflaguerre1',
+'gslsflaguerre2',
+'gslsflaguerre3',
+'gslsflaguerren',
+'gslsflambertW0',
+'gslsflambertWm1',
+'gslsflegendrePl',
+'gslsflegendreP1',
+'gslsflegendreP2',
+'gslsflegendreP3',
+'gslsflegendreQ0',
+'gslsflegendreQ1',
+'gslsflegendreQl',
+'gslsflegendrePlm',
+'gslsflegendresphPlm',
+'gslsflegendrearraysize',
+'gslsfconicalPhalf',
+'gslsfconicalPmhalf',
+'gslsfconicalP0',
+'gslsfconicalP1',
+'gslsfconicalPsphreg',
+'gslsfconicalPcylreg',
+'gslsflegendreH3d0',
+'gslsflegendreH3d1',
+'gslsflegendreH3d',
+'gslsflog',
+'gslsflogabs',
+'gslsflog1plusx',
+'gslsflog1plusxmx',
+'gslsfpowint',
+'gslsfpsiint',
+'gslsfpsi',
+'gslsfpsi1piy',
+'gslsfpsi1int',
+'gslsfpsi1',
+'gslsfpsin',
+'gslsfsynchrotron1',
+'gslsfsynchrotron2',
+'gslsftransport2',
+'gslsftransport3',
+'gslsftransport4',
+'gslsftransport5',
+'gslsfsin',
+'gslsfcos',
+'gslsfhypot',
+'gslsfsinc',
+'gslsflnsinh',
+'gslsflncosh',
+'gslsfanglerestrictsymm',
+'gslsfanglerestrictpos',
+'gslsfzetaint',
+'gslsfzeta',
+'gslsfzetam1',
+'gslsfzetam1int',
+'gslsfhzeta',
+'gslsfetaint',
+'gslsfeta',
+'imag',
+'int0d',
+'int1d',
+'int1dx1d',
+'int2d',
+'int2dx2d',
+'int3d',
+'intalledges',
+'intallfaces',
+'interpolate',
+'invdiff',
+'invdiffnp',
+'invdiffpos',
+'Isend',
+'isInf',
+'isNaN',
+'isoline',
+'Irecv',
+'j0',
+'j1',
+'jn',
+'jump',
+'lgamma',
+'LinearCG',
+'LinearGMRES',
+'log',
+'log10',
+'lrint',
+'lround',
+'max',
+'mean',
+'medit',
+'min',
+'mmg3d',
+'movemesh',
+'movemesh23',
+'movemesh3',
+'movemeshS',
+'mpiAlltoall',
+'mpiAlltoallv',
+'mpiAllgather',
+'mpiAllgatherv',
+'mpiAllReduce',
+'mpiBarrier',
+'mpiGather',
+'mpiGatherv',
+'mpiRank',
+'mpiReduce',
+'mpiScatter',
+'mpiScatterv',
+'mpiSize',
+'mpiWait',
+'mpiWaitAny',
+'mpiWtick',
+'mpiWtime',
+'mshmet',
+'NaN',
+'NLCG',
+'on',
+'OrientNormal',
+'plot',
+'polar',
+'Post',
+'POT',
+'pow',
+'processor',
+'processorblock',
+'projection',
+'randinit',
+'randint31',
+'randint32',
+'random',
+'randreal1',
+'randreal2',
+'randreal3',
+'randres53',
+'Read',
+'readmesh',
+'readmesh3',
+'Recv',
+'rint',
+'round',
+'savemesh',
+'savesol',
+'savevtk',
+'seekg',
+'Sent',
+'set',
+'sign',
+'signbit',
+'sin',
+'sinh',
+'sort',
+'splitComm',
+'splitmesh',
+'sqrt',
+'square',
+'square3',
+'segment',
+'srandom',
+'srandomdev',
+'Stringification',
+'swap',
+'system',
+'tan',
+'tanh',
+'tellg',
+'tetg',
+'tetgconvexhull',
+'tetgreconstruction',
+'tetgtransfo',
+'tgamma',
+'triangulate',
+'trunc',
+'Wait',
+'Write',
+'y0',
+'y1',
+'yn',
+'A',
+'A1',
+'abserror',
+'absolute',
+'aniso',
+'aspectratio',
+'B',
+'B1',
+'bb',
+'beginend',
+'bin',
+'boundary',
+'bw',
+'close',
+'cleanmesh',
+'cmm',
+'coef',
+'commworld',
+'composante',
+'compressor',
+'cutoff',
+'datafilename',
+'dataname',
+'dim',
+'distmax',
+'displacement',
+'doptions',
+'dparams',
+'eps',
+'err',
+'errg',
+'eta',
+'facemerge',
+'facetcl',
+'factorize',
+'file',
+'fill',
+'fixedborder',
+'flabel',
+'flags',
+'floatmesh',
+'floatsol',
+'fregion',
+'gradation',
+'grey',
+'hmax',
+'hmin',
+'holelist',
+'hsv',
+'init',
+'inquire',
+'inside',
+'IsMetric',
+'iso',
+'ivalue',
+'keepbackvertices',
+'label',
+'labeldown',
+'labelmid',
+'labelup',
+'levelset',
+'loptions',
+'lparams',
+'master',
+'maxit',
+'maxsubdiv',
+'meditff',
+'mem',
+'memory',
+'metric',
+'mode',
+'nbarrow',
+'nbiso',
+'nbiter',
+'nbjacoby',
+'nboffacetcl',
+'nbofholes',
+'nbofregions',
+'nbregul',
+'nbsmooth',
+'nbvx',
+'ncv',
+'nev',
+'nomeshgeneration',
+'normalization',
+'omega',
+'op',
+'optimize',
+'option',
+'options',
+'order',
+'orientation',
+'periodic',
+'pNormalT',
+'power',
+'precisvertice',
+'precon',
+'prev',
+'ps',
+'ptmerge',
+'qfe',
+'qforder',
+'qft',
+'qfV',
+'ratio',
+'rawvector',
+'refe',
+'reffacelow',
+'reffacemid',
+'reffaceup',
+'refnum',
+'reft',
+'reftet',
+'reftri',
+'region',
+'regionlist',
+'removeduplicate',
+'renumv',
+'renumt',
+'rescaling',
+'ridgeangle',
+'ridgeangledetection',
+'rmledges',
+'rmInternalEdges',
+'save',
+'sigma',
+'sizeofvolume',
+'smoothing',
+'solver',
+'sparams',
+'split',
+'splitin2',
+'splitpbedge',
+'stop',
+'strategy',
+'swap',
+'switch',
+'sym',
+'t',
+'tgv',
+'thetamax',
+'tol',
+'tolpivot',
+'tolpivotsym',
+'transfo',
+'U2Vc',
+'unbounded',
+'value',
+'varrow',
+'vector',
+'veps',
+'viso',
+'wait',
+'width',
+'withsurfacemesh',
+'WindowIndex',
+'which',
+'zbound'
+];
+
+Tags.sort(function (a, b) {
+    return a.toLowerCase().localeCompare(b.toLowerCase());
+});
+
+Keywords.sort(function (a, b) {
+    return a.toLowerCase().localeCompare(b.toLowerCase());
+});
+
+    var istagactive = Array(Tags.length);
+    Tags.forEach(function callback(value, i) {
+      var button = document.createElement("button");
+      button.setAttribute("class", "tag-button-off");
+      button.addEventListener("click", function() {
+        istagactive[i] = !istagactive[i];
+        if (istagactive[i])
+          this.setAttribute("class", "tag-button-on");
+        else
+          this.setAttribute("class", "tag-button-off");
+        updateList(true)
+      });
+      button.innerHTML = Tags[i];
+      //document.getElementById('tags').appendChild(button);
+    });
+
+    /*
+    let KeywordChoices = document.getElementById('ff-keywords');
+    Keywords.map( (keyword, i) => {
+      let opt = document.createElement("option");
+      opt.value = keyword;
+      opt.setAttribute("class", "testt");
+      KeywordChoices.append(opt);
+    });
+    */
+
+/*
+    let data = [{ "id": "0", "text": "Equations", "children": [{ "id": "0-0", "text": "Fluid mechanics", "children": [{ "id": "0-0-0", "text": "Navier-stokes" }, { "id": "0-0-1", "text": "Stokes" }] }, { "id": "0-1", "text": "Solid mechanics", "children": [{ "id": "0-1-0", "text": "Elasticity" }] }, { "id": "0-2", "text": "Wave propagation", "children": [{ "id": "0-2-0", "text": "Frequency domain", "children": [{ "id": "0-2-0-0", "text": "Helmholtz equation", }, { "id": "0-2-0-1", "text": "Maxwell's equations" }]}, { "id": "0-2-1", "text": "Time domain" }] }] }, { "id": "1", "text": "Spatial dimension", "children": [{ "id": "1-0", "text": "2D"}, { "id": "1-1", "text": "3D"}] }]
+*/
+
+/*
+let data =
+[
+{ "id": "0", "text": "Equations", "children":
+  [
+  { "id": "0-0", "text": "Fluid mechanics", "children":
+    [
+    { "id": "0-0-0", "text": "Navier-stokes" },
+    { "id": "0-0-1", "text": "Stokes" }
+    ]
+  },
+  { "id": "0-1", "text": "Solid mechanics", "children":
+    [
+    { "id": "0-1-0", "text": "Elasticity"
+    }
+    ]
+  },
+  { "id": "0-2", "text": "Wave propagation", "children":
+    [
+    { "id": "0-2-0", "text": "Frequency domain", "children":
+      [
+        { "id": "0-2-0-0", "text": "Helmholtz equation"},
+        { "id": "0-2-0-1", "text": "Maxwell's equations" }
+      ]
+    },
+    { "id": "0-2-1", "text": "Time domain"
+    }
+    ]
+  }
+  ]
+},
+{ "id": "1", "text": "Spatial dimension", "children":
+  [
+  { "id": "1-0", "text": "2D"},
+  { "id": "1-1", "text": "3D"}
+  ]
+}
+]
+*/
+
+  </script>
+</body>
+
+</html>

@@ -30,3 +30,32 @@ openConsole = () => {
 		consoleOpen = true
 	}
 }
+
+openConsoleExamples = () => {
+	let media = false
+	const template = window.getComputedStyle(exMain).gridTemplateRows
+	const tList = template.split(' ')
+	if (tList.length > 2)
+		media = true
+	media = false;
+
+	console
+
+	if (consoleOpen) {
+		if (!media) {
+			exResult.style.gridRow = "1/3"
+			exConsole.style.gridRow = "3"
+			exResultArrowDiv.classList.toggle('is-invisible')
+		}
+		stdoutDiv.classList.toggle('is-invisible')
+		consoleOpen = false
+	} else {
+		stdoutDiv.classList.toggle('is-invisible')
+		if (!media) {
+			exResult.style.gridRow = "1"
+			exConsole.style.gridRow = "2/4"
+			exResultArrowDiv.classList.toggle('is-invisible')
+		}
+		consoleOpen = true
+	}
+}
